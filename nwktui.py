@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-NWk-tui — Interfaz TUI para gestión de redes en dispositivos sin entorno grafico
-Requiere: python3, NetworkManager (nmcli), iproute2
+Network-TUI (nwktui) — Interfaz TUI para gestión de redes en dispositivos sin entorno grafico
+Parte de tty-tools | Requiere: python3, NetworkManager (nmcli), iproute2
 Uso: python3 nwktui.py
 """
 
@@ -148,7 +148,7 @@ def get_active_conn():
     if rc != 0:
         return conns
     for line in out.splitlines():
-        parts = line.split(':')
+        parts = split_escaped(line, ':')
         if len(parts) >= 4:
             conns.append({'name': parts[0], 'type': parts[1], 'device': parts[2], 'state': parts[3]})
     return conns
@@ -159,10 +159,10 @@ def get_wifi_signal(iface):
     out, _, _ = run_cmd(cmd)
     for line in out.splitlines():
         if line.startswith('*'):
-            parts = line.split(':')
+            parts = split_escaped(line, ':')
             if len(parts) < 5:
                 continue
-            ssid = parts[1]
+            ssid = parts[1].replace("\\:", ":").replace("\\\\", "\\")
             signal = int(parts[2]) if parts[2].isdigit() else 0
             sec = parts[3]
             freq = parts[4]
@@ -281,7 +281,7 @@ class App:
             for iface in ifaces:
                 if iface not in self.iface_cache:
                     self.iface_cache[iface] = get_iface_info(iface)
-        self.saved_connections = get_saved_connections()
+            self.saved_connections = get_saved_connections()
 
     def current_iface(self):
         with self.lock:
@@ -327,7 +327,7 @@ class App:
             pass
 
     def draw_titlebar(self, w):
-        bar = "Network TUI — tty-tools"
+        bar = "Network-TUI — tty-tools"
         self.scr.attron(curses.color_pair(C_HEADER) | curses.A_BOLD)
         self.scr.addstr(0, 0, bar.ljust(w - 1))
         t = time.strftime("%H:%M:%S")
