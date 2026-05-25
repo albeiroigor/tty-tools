@@ -38,13 +38,12 @@ def init_colors():
     curses.init_pair(C_YELLOW,   curses.COLOR_YELLOW,  -1)
     curses.init_pair(C_CYAN,     curses.COLOR_CYAN,    -1)
     curses.init_pair(C_BLUE,     curses.COLOR_BLUE,    -1)
-    curses.init_pair(C_GRAY,     curses.COLOR_WHITE,   -1)  # gris claro
-    curses.init_pair(C_TITLE,    curses.COLOR_CYAN,    -1)  # alias
+    curses.init_pair(C_GRAY,     curses.COLOR_WHITE,   -1)
+    curses.init_pair(C_TITLE,    curses.COLOR_CYAN,    -1)
     curses.init_pair(C_BORDER,   curses.COLOR_BLUE,    -1)
 
 # ─── Helpers seguros ────────────────────────────────────────────────────────
 def run_cmd(cmd_list, timeout=5):
-    """Ejecuta un comando como lista (sin shell=True), captura stdout."""
     try:
         r = subprocess.run(cmd_list, capture_output=True, text=True, timeout=timeout)
         return r.stdout.strip(), r.returncode, r.stderr.strip()
@@ -65,7 +64,7 @@ def get_wifi_list(iface=None):
     run_cmd(rescan_cmd, timeout=12)
     # 2) Esperar a que el driver actualice resultados
     time.sleep(2)
-    # 3) Listar con timeout generoso
+    # 3) Listar con timeout
     list_cmd = ["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY,FREQ", "device", "wifi", "list"]
     if iface:
         list_cmd += ["ifname", iface]
@@ -171,7 +170,7 @@ def get_wifi_signal(iface):
     return {}
 
 def get_dns():
-    """Obtiene servidores DNS sin shell=True. Devuelve lista de strings."""
+    """Obtiene servidores DNS. Devuelve lista de strings."""
     results = []
     # Intento 1: resolvectl
     out, rc, _ = run_cmd(["resolvectl", "status"])
@@ -244,16 +243,15 @@ class App:
         self.ping_log = []
         self.ping_host = "1.1.1.1"
         self.modal = None
-        self.modal_fields = []       # elementos: (label, value, is_password)
+        self.modal_fields = []
         self.modal_focus = 0
         self.modal_cb = None
         self.modal_title = ""
         self.last_active = {}
         self.wifi_info = {}
-        # caché para info de interfaz (evita comandos en cada frame)
         self.iface_cache = {}
-        self.dns_cache = []        # caché DNS (evita llamadas lentas en cada frame)
-        self.dns_cache_ts = 0      # timestamp de la última actualización
+        self.dns_cache = []
+        self.dns_cache_ts = 0
         self.loading = False
         self.scanning = False
         self.saved_connections = set()
@@ -349,7 +347,6 @@ class App:
 
     def draw_sidebar(self, h, w):
         sw = 18
-        # fondo claro
         for y in range(2, h - 1):
             self.safe_addstr(y, 0, " " * sw)
         # bordes
